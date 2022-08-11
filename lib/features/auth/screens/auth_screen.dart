@@ -30,6 +30,13 @@ class _AuthScreenState extends State<AuthScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isHidden = true;
+
+  // void _show(String msg) {
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text(msg),
+  //   ));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -79,48 +86,63 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(
                   height: 10.0,
                 ),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                      icon: const Icon(Icons.lock),
-                      hintText: 'Enter your password',
-                      labelText: 'Password',
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide: const BorderSide(
-                          color: Colors.blue,
+                Stack(children: [
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                        icon: const Icon(Icons.lock),
+                        hintText: 'Enter your password',
+                        labelText: 'Password',
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                          borderSide: const BorderSide(
+                            color: Colors.blue,
+                          ),
                         ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide: const BorderSide(
-                          color: Colors.blue,
-                        ),
-                      )),
-                  onSaved: (String? value) {
-                    // model.password = value.toString();
-                  },
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
-                  // obscureText: true,
-                ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                          borderSide: const BorderSide(
+                            color: Colors.blue,
+                          ),
+                        )),
+                    onSaved: (String? value) {
+                      // model.password = value.toString();
+                    },
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter some text';
+                      }
+                      return null;
+                    },
+                    obscureText: _isHidden,
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: IconButton(
+                        onPressed: () => setState(() {
+                          _isHidden = !_isHidden;
+                        }),
+                        alignment: Alignment.centerRight,
+                        icon: _isHidden
+                            ? const Icon(Icons.visibility)
+                            : const Icon(Icons.visibility_off)),
+                  )
+                ]),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Validate will return true if the form is valid, or false if
-                      // the form is invalid.
-                      if (_formKey.currentState!.validate()) {
-                        // Process data.
-                        // _formKey.currentState.save();
-                        _submit();
-                      }
-                    },
-                    child: const Text('Submit'),
+                  child: Builder(
+                    builder: (BuildContext context) => ElevatedButton(
+                      onPressed: () {
+                        // Validate will return true if the form is valid, or false if
+                        // the form is invalid.
+                        if (_formKey.currentState!.validate()) {
+                          // Process data.
+                          // _formKey.currentState.save();
+                          _submit(context);
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
                   ),
                 ),
               ],
@@ -131,7 +153,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  _submit() {
+  _submit(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Processing Data')),
     );
@@ -141,13 +163,18 @@ class _AuthScreenState extends State<AuthScreen> {
         password: _passwordController.text.toString());
 
     _auth(model).then((token) {
-      print("my token: $token");
       _saveDataToShared(model);
       _pushToChat(context, token);
     }).catchError((e) {
-      print("catched error: ${e.message}");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
+        SnackBar(
+            content: Row(children: [
+          const Icon(Icons.report_problem, color: Colors.red),
+          const SizedBox(
+            width: 10,
+          ),
+          Text(e.message),
+        ])),
       );
     });
   }
