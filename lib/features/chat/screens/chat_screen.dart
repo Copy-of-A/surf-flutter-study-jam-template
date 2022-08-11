@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_message_dto.dart';
+import 'package:surf_practice_chat_flutter/features/chat/models/chat_message_location_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_user_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_user_local_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/repository/chat_repository.dart';
+import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Main screen of chat app, containing messages.
 class ChatScreen extends StatefulWidget {
@@ -148,7 +151,7 @@ class _ChatAppBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onUpdatePressed,
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
           ),
         ],
       ),
@@ -164,11 +167,25 @@ class _ChatMessage extends StatelessWidget {
     Key? key,
   }) : super(key: key);
 
+  Future<void> openMap(double latitude, double longitude) async {
+    var url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+    if (Platform.isIOS) {
+      url = Uri.parse('http://maps.apple.com/?ll=$latitude,$longitude');
+    }
+    if (await canLaunch(url.toString())) {
+      await launch(url.toString());
+    } else {
+      throw 'Could not open the map.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: chatData.chatUserDto is ChatUserLocalDto ? colorScheme.primary.withOpacity(.1) : null,
+      color: chatData.chatUserDto is ChatUserLocalDto
+          ? colorScheme.primary.withOpacity(.1)
+          : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: 18,
@@ -184,11 +201,18 @@ class _ChatMessage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    chatData.chatUserDto.name ?? '',
+                    chatData.chatUserDto.name ?? 'Unknown name',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(chatData.message ?? ''),
+                  if (chatData is ChatMessageGeolocationDto)
+                    TextButton(
+                      onPressed: () => openMap(-3.823216,-38.481700),
+                      child: Text((chatData as ChatMessageGeolocationDto)
+                          .location
+                          .toString()),
+                    ),
                 ],
               ),
             ),
