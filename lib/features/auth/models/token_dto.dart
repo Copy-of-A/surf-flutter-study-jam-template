@@ -13,8 +13,8 @@ class TokenDto {
     required this.token,
   });
 
-  // @override
-  // String toString() {
-  //   return 'TokenDto(token: $token)';
-  // }
+  @override
+  String toString() {
+    return 'TokenDto(token: $token)';
+  }
 }

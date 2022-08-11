@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:surf_study_jam/surf_study_jam.dart';
+import '../../chat/repository/chat_repository.dart';
+import '../../chat/screens/chat_screen.dart';
+import '../models/authHandler.dart';
 import '../models/form_model.dart';
 import '../models/token_dto.dart';
 import '../repository/auth_repository.dart';
-import '../screens/result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthForm extends StatefulWidget {
@@ -18,23 +20,41 @@ class _AuthFormState extends State<AuthForm> {
   TextEditingController loginController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
+  StudyJamClient studyJamClient = StudyJamClient();
+
+  void _auth() {
+    ChatRepository chatRepository = ChatRepository(studyJamClient);
+    FormModel model = FormModel(
+        login: loginController.text.toString(),
+        password: passwordController.text.toString());
+    AuthHandler authHandler = AuthHandler(
+      studyJamClient: studyJamClient,
+    );
+    authHandler.handleGetToken(model).then((data) {
+      print("data from auth: $data");
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChatScreen(
+                    chatRepository: chatRepository,
+                  )));
+    }).catchError((e) => {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Row(children: const [
+              Icon(Icons.error),
+              SizedBox(width: 15,),
+              Text('Invalid login or password'),
+            ])),
+          )
+        });
+  }
+
   void _submit() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Processing Data')),
     );
-    FormModel model = FormModel(
-        login: loginController.text.toString(),
-        password: passwordController.text.toString());
-    print(
-        "login: ${model.login} password: ${model.password}");
-    AuthRepository authRepository = AuthRepository(StudyJamClient());
-    final prefs = await SharedPreferences.getInstance();
-    final TokenDto token = await authRepository.signIn(
-        login: model.login, password: model.password);
-    final String tokenStr = token.toString();
-    await prefs.setString('token', tokenStr);
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => Result(model: model)));
+    _auth();
   }
 
   @override
@@ -106,7 +126,7 @@ class _AuthFormState extends State<AuthForm> {
                 }
                 return null;
               },
-              obscureText: true,
+              // obscureText: true,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
