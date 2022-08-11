@@ -6,7 +6,8 @@ import 'package:surf_practice_chat_flutter/features/chat/models/chat_user_local_
 import 'package:surf_practice_chat_flutter/features/chat/repository/chat_repository.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:geolocator/geolocator.dart';
+import '../models/chat_geolocation_geolocation_dto.dart';
 import '../models/chat_message_image_dto.dart';
 
 /// Main screen of chat app, containing messages.
@@ -26,6 +27,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _nameEditingController = TextEditingController();
+  late ChatGeolocationDto _location;
 
   Iterable<ChatMessageDto> _currentMessages = [];
 
@@ -50,7 +52,9 @@ class _ChatScreenState extends State<ChatScreen> {
               messages: _currentMessages,
             ),
           ),
-          _ChatTextField(onSendPressed: _onSendPressed),
+          _ChatTextField(
+              onSendPressed: _onSendPressed,
+              onAddLocationPressed: _onAddLocationPressed),
         ],
       ),
     );
@@ -64,9 +68,19 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _onSendPressed(String messageText) async {
-    final messages = await widget.chatRepository.sendMessage(messageText);
+    final messages = _location == null
+        ? await widget.chatRepository.sendMessage(messageText)
+        : await widget.chatRepository
+            .sendGeolocationMessage(message: messageText, location: _location);
     setState(() {
       _currentMessages = messages;
+    });
+  }
+
+  void _onAddLocationPressed(ChatGeolocationDto location) {
+    print("!location: $location");
+    setState(() {
+      _location = location;
     });
   }
 }
@@ -92,13 +106,60 @@ class _ChatBody extends StatelessWidget {
 
 class _ChatTextField extends StatelessWidget {
   final ValueChanged<String> onSendPressed;
+  final Function(ChatGeolocationDto) onAddLocationPressed;
 
   final _textEditingController = TextEditingController();
 
   _ChatTextField({
     required this.onSendPressed,
+    required this.onAddLocationPressed,
     Key? key,
   }) : super(key: key);
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
+  }
+
+  void getLocation() {
+    _determinePosition().then((value) {
+      final String oldValue = _textEditingController.text.toString();
+      _textEditingController.value = TextEditingValue(
+          text: "GEO: (${value.latitude};${value.longitude}) $oldValue",
+          selection: TextSelection.fromPosition(
+            const TextPosition(offset: 0),
+          ));
+      onAddLocationPressed(
+          ChatGeolocationDto.fromGeoPoint([value.latitude, value.longitude]));
+    }).catchError((e) => print("error$e"));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +176,10 @@ class _ChatTextField extends StatelessWidget {
         ),
         child: Row(
           children: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.attach_file)),
+            IconButton(
+                onPressed: () => getLocation(),
+                icon: const Icon(Icons.location_pin)),
             Expanded(
               child: TextField(
                 controller: _textEditingController,
@@ -153,7 +218,7 @@ class _ChatAppBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onUpdatePressed,
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh),
           ),
         ],
       ),
@@ -175,8 +240,8 @@ class _ChatMessage extends StatelessWidget {
     if (Platform.isIOS) {
       url = Uri.parse('http://maps.apple.com/?ll=$latitude,$longitude');
     }
-    if (await canLaunch(url.toString())) {
-      await launch(url.toString());
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
     } else {
       throw 'Could not open the map.';
     }
@@ -195,47 +260,61 @@ class _ChatMessage extends StatelessWidget {
           vertical: 18,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             _ChatAvatar(userData: chatData.chatUserDto),
             const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    chatData.chatUserDto.name ?? 'Unknown name',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                // margin: EdgeInsets.only(right: 12, top: 8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF486993),
+                  borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                    topLeft: Radius.circular(15),
                   ),
-                  const SizedBox(height: 4),
-                  Text(chatData.message ?? ''),
-                  if (chatData is ChatMessageGeolocationDto)
-                    TextButton(
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.cyanAccent),
-                        shadowColor:
-                            MaterialStateProperty.all<Color>(Colors.black),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      chatData.chatUserDto.name ?? 'Unknown name',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(chatData.message ?? ''),
+                    if (chatData is ChatMessageGeolocationDto)
+                      TextButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Colors.cyanAccent),
+                          shadowColor:
+                              MaterialStateProperty.all<Color>(Colors.black),
+                        ),
+                        onPressed: () => openMap(
+                            (chatData as ChatMessageGeolocationDto)
+                                .location
+                                .latitude,
+                            (chatData as ChatMessageGeolocationDto)
+                                .location
+                                .longitude),
+                        child: const Text("Open maps"),
                       ),
-                      onPressed: () => openMap(
-                          (chatData as ChatMessageGeolocationDto)
-                              .location
-                              .latitude,
-                          (chatData as ChatMessageGeolocationDto)
-                              .location
-                              .longitude),
-                      child: const Text("Open maps"),
-                    ),
-                  if (chatData is ChatMessageImageDto)
-                    ListView.builder(
-                      shrinkWrap: true,
-                      itemCount:
-                          (chatData as ChatMessageImageDto).imageUrls.length,
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      itemBuilder: ((_, index) => Image.network(
-                          (chatData as ChatMessageImageDto).imageUrls[index])),
-                    ),
-                ],
+                    if (chatData is ChatMessageImageDto)
+                      ListView.builder(
+                        shrinkWrap: true,
+                        itemCount:
+                            (chatData as ChatMessageImageDto).imageUrls.length,
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        itemBuilder: ((_, index) => Image.network(
+                            (chatData as ChatMessageImageDto)
+                                .imageUrls[index])),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],

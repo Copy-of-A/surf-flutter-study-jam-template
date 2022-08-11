@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:surf_practice_chat_flutter/features/auth/exceptions/auth_exception.dart';
 import 'package:surf_practice_chat_flutter/features/auth/models/token_dto.dart';
 import 'package:surf_practice_chat_flutter/features/auth/repository/auth_repository.dart';
@@ -135,8 +136,13 @@ class _AuthScreenState extends State<AuthScreen> {
       const SnackBar(content: Text('Processing Data')),
     );
 
-    _auth().then((token) {
+    FormModel model = FormModel(
+        login: _loginController.text.toString(),
+        password: _passwordController.text.toString());
+
+    _auth(model).then((token) {
       print("my token: $token");
+      _saveDataToShared(model);
       _pushToChat(context, token);
     }).catchError((e) {
       print("catched error: ${e.message}");
@@ -146,10 +152,12 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
-  Future _auth() async {
-    FormModel model = FormModel(
-        login: _loginController.text.toString(),
-        password: _passwordController.text.toString());
+  _saveDataToShared(FormModel model) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('login', model.login);
+  }
+
+  Future _auth(FormModel model) async {
     final token = await widget.authRepository
         .signIn(login: model.login, password: model.password);
     return token;
