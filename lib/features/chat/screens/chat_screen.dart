@@ -7,6 +7,8 @@ import 'package:surf_practice_chat_flutter/features/chat/repository/chat_reposit
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/chat_message_image_dto.dart';
+
 /// Main screen of chat app, containing messages.
 class ChatScreen extends StatefulWidget {
   /// Repository for chat functionality.
@@ -168,7 +170,8 @@ class _ChatMessage extends StatelessWidget {
   }) : super(key: key);
 
   Future<void> openMap(double latitude, double longitude) async {
-    var url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+    var url = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
     if (Platform.isIOS) {
       url = Uri.parse('http://maps.apple.com/?ll=$latitude,$longitude');
     }
@@ -208,11 +211,25 @@ class _ChatMessage extends StatelessWidget {
                   Text(chatData.message ?? ''),
                   if (chatData is ChatMessageGeolocationDto)
                     TextButton(
-                      onPressed: () => openMap(-3.823216,-38.481700),
-                      child: Text((chatData as ChatMessageGeolocationDto)
-                          .location
-                          .toString()),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.cyanAccent),
+                        shadowColor:
+                            MaterialStateProperty.all<Color>(Colors.black),
+                      ),
+                      onPressed: () => openMap(
+                          (chatData as ChatMessageGeolocationDto)
+                              .location
+                              .latitude,
+                          (chatData as ChatMessageGeolocationDto)
+                              .location
+                              .longitude),
+                      child: const Text("Open maps"),
                     ),
+                  if (chatData is ChatMessageImageDto)
+                    Image.network((chatData as ChatMessageImageDto)
+                        .imageUrls[0]
+                        .toString())
                 ],
               ),
             ),
