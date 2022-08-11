@@ -5,6 +5,8 @@ import 'package:surf_practice_chat_flutter/features/chat/repository/chat_reposit
 import 'package:surf_practice_chat_flutter/features/chat/screens/chat_screen.dart';
 import 'package:surf_study_jam/surf_study_jam.dart';
 
+import '../components/AuthForm.dart';
+
 /// Screen for authorization process.
 ///
 /// Contains [IAuthRepository] to do so.
@@ -26,7 +28,15 @@ class _AuthScreenState extends State<AuthScreen> {
   // TODO(task): Implement Auth screen.
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError();
+    return MaterialApp(
+      title: "flutter tutorial",
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("Flutter Chat"),
+        ),
+        body: AuthForm(),
+      ),
+    );
   }
 
   void _pushToChat(BuildContext context, TokenDto token) {
