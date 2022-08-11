@@ -13,10 +13,10 @@ class ChatMessageImageDto extends ChatMessageDto {
     required String message,
     required DateTime createdDate,
   }) : super(
-    chatUserDto: chatUserDto,
-    message: message,
-    createdDateTime: createdDate,
-  );
+          chatUserDto: chatUserDto,
+          message: message,
+          createdDateTime: createdDate,
+        );
 
   /// Named constructor for converting DTO from [StudyJamClient].
   ChatMessageImageDto.fromSJClient({
@@ -24,11 +24,8 @@ class ChatMessageImageDto extends ChatMessageDto {
     required SjUserDto sjUserDto,
   })  : imageUrls = sjMessageDto.images!,
         super(
-        createdDateTime: sjMessageDto.created,
-        message: sjMessageDto.text,
-        chatUserDto: ChatUserDto.fromSJClient(sjUserDto),
-      );
-
-  // @override
-  // String toString() => '${imageUrls[0]}';
+          createdDateTime: sjMessageDto.created,
+          message: sjMessageDto.text,
+          chatUserDto: ChatUserDto.fromSJClient(sjUserDto),
+        );
 }

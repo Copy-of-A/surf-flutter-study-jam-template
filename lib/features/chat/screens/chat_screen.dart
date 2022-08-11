@@ -227,9 +227,14 @@ class _ChatMessage extends StatelessWidget {
                       child: const Text("Open maps"),
                     ),
                   if (chatData is ChatMessageImageDto)
-                    Image.network((chatData as ChatMessageImageDto)
-                        .imageUrls[0]
-                        .toString())
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount:
+                          (chatData as ChatMessageImageDto).imageUrls.length,
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      itemBuilder: ((_, index) => Image.network(
+                          (chatData as ChatMessageImageDto).imageUrls[index])),
+                    ),
                 ],
               ),
             ),
