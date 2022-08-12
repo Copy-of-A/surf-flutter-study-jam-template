@@ -36,6 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late ChatGeolocationDto _location;
   bool _hasLocation = false;
   String _userName = "";
+  bool _isLoading = false;
 
   Iterable<ChatMessageDto> _currentMessages = [];
 
@@ -63,11 +64,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterTop,
-      floatingActionButton: FloatingActionButton.small(
-        onPressed: _scrollDown,
-        backgroundColor: Colors.indigo,
-        child: const Icon(Icons.arrow_downward),
-      ),
+      floatingActionButton: _currentMessages.length > 7
+          ? FloatingActionButton.small(
+              onPressed: _scrollDown,
+              backgroundColor: Colors.indigo,
+              child: const Icon(Icons.arrow_downward),
+            )
+          : null,
       backgroundColor: colorScheme.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(48),
@@ -85,6 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: _ChatBody(
               messages: _currentMessages,
               controller: _controller,
+              isLoading: _isLoading,
             ),
           ),
           _ChatTextField(
@@ -96,11 +100,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _onUpdatePressed() async {
+    setState(() {
+      _isLoading = true;
+    });
     final messages = await widget.chatRepository.getMessages();
     final userName = await saveUserName();
     setState(() {
       _currentMessages = messages;
       _userName = userName;
+      _isLoading = false;
     });
   }
 
@@ -133,29 +141,38 @@ class _ChatScreenState extends State<ChatScreen> {
 class _ChatBody extends StatelessWidget {
   final Iterable<ChatMessageDto> messages;
   final ScrollController controller;
+  final bool isLoading;
 
   const _ChatBody({
     required this.messages,
     Key? key,
     required this.controller,
+    required this.isLoading,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return messages.length > 0
-        ? ListView.builder(
-            controller: controller,
-            itemCount: messages.length,
-            itemBuilder: (_, index) => _ChatMessage(
-              chatData: messages.elementAt(index),
-            ),
-          )
-        : const Center(
+    return isLoading
+        ? const Center(
             child: Text(
-              "There are no messages yet",
+              "Loading...",
               style: TextStyle(fontSize: 25),
             ),
-          );
+          )
+        : messages.length > 0
+            ? ListView.builder(
+                controller: controller,
+                itemCount: messages.length,
+                itemBuilder: (_, index) => _ChatMessage(
+                  chatData: messages.elementAt(index),
+                ),
+              )
+            : const Center(
+                child: Text(
+                  "There are no messages yet",
+                  style: TextStyle(fontSize: 25),
+                ),
+              );
   }
 }
 

@@ -110,7 +110,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       }
                       return null;
                     },
-                    // obscureText: _isHidden,
+                    obscureText: _isHidden,
                   ),
                   Positioned(
                     right: 0,
