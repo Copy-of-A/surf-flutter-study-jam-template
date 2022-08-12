@@ -60,7 +60,7 @@ class _TopicsScreenState extends State<TopicsScreen> {
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Flutter Chat"),
+                  const Text("StudyJam Topics"),
                   IconButton(
                     onPressed: () => createNewTopic(context),
                     icon: const Icon(Icons.add_box),

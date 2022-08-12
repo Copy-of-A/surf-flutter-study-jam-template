@@ -136,18 +136,26 @@ class _ChatBody extends StatelessWidget {
 
   const _ChatBody({
     required this.messages,
-    Key? key, required this.controller,
+    Key? key,
+    required this.controller,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: controller,
-      itemCount: messages.length,
-      itemBuilder: (_, index) => _ChatMessage(
-        chatData: messages.elementAt(index),
-      ),
-    );
+    return messages.length > 0
+        ? ListView.builder(
+            controller: controller,
+            itemCount: messages.length,
+            itemBuilder: (_, index) => _ChatMessage(
+              chatData: messages.elementAt(index),
+            ),
+          )
+        : const Center(
+            child: Text(
+              "There are no messages yet",
+              style: TextStyle(fontSize: 25),
+            ),
+          );
   }
 }
 
