@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/bubble_type.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_message_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_message_location_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_user_dto.dart';
@@ -32,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _nameEditingController = TextEditingController();
   late ChatGeolocationDto _location;
   bool _hasLocation = false;
+  String _userName = "";
 
   Iterable<ChatMessageDto> _currentMessages = [];
 
@@ -46,6 +48,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: _ChatAppBar(
           controller: _nameEditingController,
           onUpdatePressed: _onUpdatePressed,
+          userName: _userName,
         ),
       ),
       body: Column(
@@ -66,9 +69,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _onUpdatePressed() async {
     final messages = await widget.chatRepository.getMessages();
+    final userName = await saveUserName();
     setState(() {
       _currentMessages = messages;
+      _userName = userName;
     });
+  }
+
+  Future<String> saveUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = await widget.chatRepository.getLocalUser();
+    await prefs.setString('userName', user.name ?? "Unknown name");
+    return user.name ?? "Unknown name";
   }
 
   Future<void> _onSendPressed(String messageText) async {
@@ -83,7 +95,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onAddLocationPressed(ChatGeolocationDto location) {
-    print("!location: $location");
     setState(() {
       _location = location;
       _hasLocation = true;
@@ -209,10 +220,12 @@ class _ChatTextField extends StatelessWidget {
 class _ChatAppBar extends StatelessWidget {
   final VoidCallback onUpdatePressed;
   final TextEditingController controller;
+  final String userName;
 
   const _ChatAppBar({
     required this.onUpdatePressed,
     required this.controller,
+    required this.userName,
     Key? key,
   }) : super(key: key);
 
@@ -222,6 +235,7 @@ class _ChatAppBar extends StatelessWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          Text(userName),
           IconButton(
             onPressed: onUpdatePressed,
             icon: const Icon(Icons.refresh),

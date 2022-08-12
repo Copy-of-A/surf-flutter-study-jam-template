@@ -58,6 +58,8 @@ abstract class IChatRepository {
   ///
   /// Throws an [Exception] when some error appears.
   Future<ChatUserDto> getUser(int userId);
+
+  Future<ChatUserDto> getLocalUser();
 }
 
 /// Simple implementation of [IChatRepository], using [StudyJamClient].
@@ -115,6 +117,12 @@ class ChatRepository implements IChatRepository {
     return localUser?.id == user.id
         ? ChatUserLocalDto.fromSJClient(user)
         : ChatUserDto.fromSJClient(user);
+  }
+
+  @override
+  Future<ChatUserDto> getLocalUser() async {
+    final localUser = await _studyJamClient.getUser();
+    return ChatUserLocalDto.fromSJClient(localUser!);
   }
 
   Future<Iterable<ChatMessageDto>> _fetchAllMessages() async {

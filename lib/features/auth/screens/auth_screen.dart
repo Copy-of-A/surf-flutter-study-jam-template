@@ -5,7 +5,9 @@ import 'package:surf_practice_chat_flutter/features/auth/models/token_dto.dart';
 import 'package:surf_practice_chat_flutter/features/auth/repository/auth_repository.dart';
 import 'package:surf_practice_chat_flutter/features/chat/repository/chat_repository.dart';
 import 'package:surf_practice_chat_flutter/features/chat/screens/chat_screen.dart';
+import 'package:surf_practice_chat_flutter/features/topics/repository/chart_topics_repository.dart';
 import 'package:surf_study_jam/surf_study_jam.dart';
+import '../../topics/screens/topics_screen.dart';
 import '../models/form_model.dart';
 
 /// Screen for authorization process.
@@ -31,12 +33,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isHidden = true;
-
-  // void _show(String msg) {
-  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //     content: Text(msg),
-  //   ));
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +110,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       }
                       return null;
                     },
-                    obscureText: _isHidden,
+                    // obscureText: _isHidden,
                   ),
                   Positioned(
                     right: 0,
@@ -194,11 +190,15 @@ class _AuthScreenState extends State<AuthScreen> {
       context,
       MaterialPageRoute(
         builder: (_) {
-          return ChatScreen(
-            chatRepository: ChatRepository(
-              StudyJamClient().getAuthorizedClient(token.token),
-            ),
-          );
+          return TopicsScreen(
+              chatTopicsRepository: ChatTopicsRepository(
+            StudyJamClient().getAuthorizedClient(token.token),
+          ));
+          // return ChatScreen(
+          //   chatRepository: ChatRepository(
+          //     StudyJamClient().getAuthorizedClient(token.token),
+          //   ),
+          // );
         },
       ),
     );

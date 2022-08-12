@@ -7,6 +7,12 @@ class CreateTopicScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError();
+    return MaterialApp(
+        title: "flutter tutorial",
+        home: Scaffold(
+            appBar: AppBar(
+              title: const Text("Flutter Chat"),
+            ),
+            body: const Text("topic screen")));
   }
 }
