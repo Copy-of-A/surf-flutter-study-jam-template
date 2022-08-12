@@ -196,7 +196,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ));
           // return ChatScreen(
           //   chatRepository: ChatRepository(
-          //     StudyJamClient().getAuthorizedClient(token.token),
+          //     StudyJamClient().getAuthorizedClient(token.token), 1
           //   ),
           // );
         },

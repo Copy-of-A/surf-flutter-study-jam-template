@@ -65,9 +65,10 @@ abstract class IChatRepository {
 /// Simple implementation of [IChatRepository], using [StudyJamClient].
 class ChatRepository implements IChatRepository {
   final StudyJamClient _studyJamClient;
+  final int _chatId;
 
   /// Constructor for [ChatRepository].
-  ChatRepository(this._studyJamClient);
+  ChatRepository(this._studyJamClient, this._chatId);
 
   @override
   Future<Iterable<ChatMessageDto>> getMessages() async {
@@ -92,11 +93,11 @@ class ChatRepository implements IChatRepository {
   Future<Iterable<ChatMessageDto>> sendGeolocationMessage({
     required ChatGeolocationDto location,
     String? message,
+    int? chatId,
   }) async {
     if (message != null && message.length > IChatRepository.maxMessageLength) {
       throw InvalidMessageException('Message "$message" is too large.');
     }
-    print("location.toGeopoint(): ${location.toGeopoint()}");
     await _studyJamClient.sendMessage(SjMessageSendsDto(
       text: message,
       geopoint: location.toGeopoint(),
@@ -137,7 +138,7 @@ class ChatRepository implements IChatRepository {
     // we're doing it in cycle.
     while (!isLimitBroken) {
       final batch = await _studyJamClient.getMessages(
-          lastMessageId: lastMessageId, limit: 10000);
+          lastMessageId: lastMessageId, limit: 10000, chatId: _chatId);
       messages.addAll(batch);
       lastMessageId = batch.last.chatId;
       if (batch.length < 10000) {

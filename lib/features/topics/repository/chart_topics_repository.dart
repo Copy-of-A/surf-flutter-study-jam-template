@@ -21,6 +21,8 @@ abstract class IChatTopicsRepository {
   /// Retrieves [ChatTopicDto] with its unique id, once its
   /// created.
   Future<ChatTopicDto> createTopic(ChatTopicSendDto chatTopicSendDto);
+
+  StudyJamClient getStudyJamClient();
 }
 
 /// Simple implementation of [IChatTopicsRepository], using [StudyJamClient].
@@ -50,4 +52,7 @@ class ChatTopicsRepository implements IChatTopicsRepository {
 
     return ChatTopicDto.fromSJClient(sjChatDto: sjChatDto);
   }
+
+  @override
+  StudyJamClient getStudyJamClient() => _studyJamClient;
 }
