@@ -116,7 +116,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         description: _topicDescriptionController.text);
 
     _createTopic(chatTopicSendDto).then((token) {
-      openChat(context);
+      Navigator.pop(context);
     }).catchError((e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -131,18 +131,18 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
     });
   }
 
-  void openChat(BuildContext context) {
-    Navigator.push<ChatScreen>(
-      context,
-      MaterialPageRoute(
-        builder: (_) {
-          return TopicsScreen(
-              chatTopicsRepository:
-                  ChatTopicsRepository(widget.studyJamClient));
-        },
-      ),
-    );
-  }
+  // void openChat(BuildContext context) {
+  //   Navigator.push<ChatScreen>(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) {
+  //         return TopicsScreen(
+  //             chatTopicsRepository:
+  //                 ChatTopicsRepository(widget.studyJamClient));
+  //       },
+  //     ),
+  //   );
+  // }
 
   _createTopic(ChatTopicSendDto chatTopicSendDto) async {
     await widget.chatTopicsRepository.createTopic(chatTopicSendDto);

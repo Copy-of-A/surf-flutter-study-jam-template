@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:surf_practice_chat_flutter/features/auth/screens/auth_screen.dart';
 import 'package:surf_study_jam/surf_study_jam.dart';
+import '../../auth/repository/auth_repository.dart';
 import '../../chat/repository/chat_repository.dart';
 import '../../chat/screens/chat_screen.dart';
 import '../models/chat_topic_dto.dart';
@@ -9,10 +11,12 @@ import 'create_topic_screen.dart';
 /// Screen with different chat topics to go to.
 class TopicsScreen extends StatefulWidget {
   final IChatTopicsRepository chatTopicsRepository;
+  final IAuthRepository authRepository;
 
   /// Constructor for [TopicsScreen].
   const TopicsScreen({
     required this.chatTopicsRepository,
+    required this.authRepository,
     Key? key,
   }) : super(key: key);
 
@@ -39,16 +43,24 @@ class _TopicsScreenState extends State<TopicsScreen> {
     });
   }
 
+  _logout(BuildContext context) async {
+    Navigator.pop(context);
+    await widget.authRepository.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         title: "flutter tutorial",
         home: Scaffold(
             appBar: AppBar(
+              leading: BackButton(
+                onPressed: () => _logout(context),
+              ),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Flutter Chat"),
+                  const Text("Flutter Chat"),
                   IconButton(
                     onPressed: () => createChat(context),
                     icon: const Icon(Icons.add_box),
@@ -101,6 +113,7 @@ class ChatTopic extends StatelessWidget {
         builder: (_) {
           return ChatScreen(
             chatRepository: ChatRepository(studyJamClient, topicData.id),
+            topicName: topicData.name ?? "",
           );
         },
       ),

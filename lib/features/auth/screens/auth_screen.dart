@@ -158,20 +158,33 @@ class _AuthScreenState extends State<AuthScreen> {
         login: _loginController.text.toString(),
         password: _passwordController.text.toString());
 
-    _auth(model).then((token) {
-      _pushToChat(context, token);
-    }).catchError((e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Row(children: [
-          const Icon(Icons.report_problem, color: Colors.red),
-          const SizedBox(
-            width: 10,
-          ),
-          Text(e.message),
-        ])),
-      );
-    }).then((value) => _saveDataToShared(model));
+    _handleAsyncFunctions(model).then((token) {
+          _pushToChat(context, token);
+        })
+        .then((value) => _saveDataToShared(model))
+        .catchError((e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Row(children: [
+              const Icon(Icons.report_problem, color: Colors.red),
+              const SizedBox(
+                width: 10,
+              ),
+              Text(e.message),
+            ])),
+          );
+        }).then((value) => _saveDataToShared(model));
+  }
+
+  _handleAsyncFunctions(FormModel model) async {
+    TokenDto token = await _auth(model);
+    await _saveTokenToShared(token.toString());
+    return token;
+  }
+
+  _saveTokenToShared(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
   }
 
   _saveDataToShared(FormModel model) async {
@@ -191,9 +204,13 @@ class _AuthScreenState extends State<AuthScreen> {
       MaterialPageRoute(
         builder: (_) {
           return TopicsScreen(
-              chatTopicsRepository: ChatTopicsRepository(
-            StudyJamClient().getAuthorizedClient(token.token),
-          ));
+            chatTopicsRepository: ChatTopicsRepository(
+              StudyJamClient().getAuthorizedClient(token.token),
+            ), authRepository: widget.authRepository,
+          );
+          // return ChatScreen(
+          //     chatRepository: ChatRepository(
+          //         StudyJamClient().getAuthorizedClient(token.token), 1));
         },
       ),
     );

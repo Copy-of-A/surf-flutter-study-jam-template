@@ -18,11 +18,13 @@ import '../models/chat_message_image_dto.dart';
 class ChatScreen extends StatefulWidget {
   /// Repository for chat functionality.
   final IChatRepository chatRepository;
+  final String topicName;
 
   /// Constructor for [ChatScreen].
   const ChatScreen({
     required this.chatRepository,
     Key? key,
+    required this.topicName,
   }) : super(key: key);
 
   @override
@@ -49,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
           controller: _nameEditingController,
           onUpdatePressed: _onUpdatePressed,
           userName: _userName,
+          topicName: widget.topicName,
         ),
       ),
       body: Column(
@@ -169,10 +172,11 @@ class _ChatTextField extends StatelessWidget {
     _determinePosition().then((value) {
       final String oldValue = _textEditingController.text.toString();
       _textEditingController.value = TextEditingValue(
-          text: "GEO: (${value.latitude};${value.longitude}) $oldValue",
-          selection: TextSelection.fromPosition(
-            const TextPosition(offset: 0),
-          ));
+        text: "GEO: (${value.latitude};${value.longitude}) $oldValue",
+        // selection: TextSelection.fromPosition(
+        //   const TextPosition(offset: 0),
+        // )
+      );
       onAddLocationPressed(
           ChatGeolocationDto.fromGeoPoint([value.latitude, value.longitude]));
     }).catchError((e) => print("error$e"));
@@ -221,25 +225,30 @@ class _ChatAppBar extends StatelessWidget {
   final VoidCallback onUpdatePressed;
   final TextEditingController controller;
   final String userName;
+  final String topicName;
 
   const _ChatAppBar({
     required this.onUpdatePressed,
     required this.controller,
     required this.userName,
     Key? key,
+    required this.topicName,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(userName),
-          IconButton(
-            onPressed: onUpdatePressed,
-            icon: const Icon(Icons.refresh),
-          ),
+          Expanded(child: Text(topicName)),
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+            Text(userName),
+            IconButton(
+              onPressed: onUpdatePressed,
+              icon: const Icon(Icons.refresh),
+            ),
+          ]),
         ],
       ),
     );

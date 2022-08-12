@@ -15,6 +15,6 @@ class TokenDto {
 
   @override
   String toString() {
-    return 'TokenDto(token: $token)';
+    return '$token';
   }
 }
