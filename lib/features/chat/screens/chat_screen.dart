@@ -39,11 +39,35 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Iterable<ChatMessageDto> _currentMessages = [];
 
+  final ScrollController _controller = ScrollController();
+
+  void _scrollDown() {
+    _controller.animateTo(
+      _controller.position.maxScrollExtent,
+      duration: const Duration(seconds: 2),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onUpdatePressed();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterTop,
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: _scrollDown,
+        backgroundColor: Colors.indigo,
+        child: const Icon(Icons.arrow_downward),
+      ),
       backgroundColor: colorScheme.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(48),
@@ -60,6 +84,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: _ChatBody(
               messages: _currentMessages,
+              controller: _controller,
             ),
           ),
           _ChatTextField(
@@ -107,15 +132,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class _ChatBody extends StatelessWidget {
   final Iterable<ChatMessageDto> messages;
+  final ScrollController controller;
 
   const _ChatBody({
     required this.messages,
-    Key? key,
+    Key? key, required this.controller,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      controller: controller,
       itemCount: messages.length,
       itemBuilder: (_, index) => _ChatMessage(
         chatData: messages.elementAt(index),
@@ -286,7 +313,7 @@ class _ChatMessage extends StatelessWidget {
           vertical: 5,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           textDirection: chatData.chatUserDto is ChatUserLocalDto
               ? TextDirection.rtl
               : TextDirection.ltr,
