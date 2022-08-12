@@ -284,7 +284,9 @@ class _ChatMessage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      chatData.chatUserDto.name ?? 'Unknown name',
+                      chatData.chatUserDto.name == null
+                          ? 'Unknown name'
+                          : chatData.chatUserDto.name!.trim(),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
@@ -329,6 +331,18 @@ class _ChatMessage extends StatelessWidget {
 
 class _ChatAvatar extends StatelessWidget {
   static const double _size = 42;
+  static const List<Color> colors = [
+    Colors.redAccent,
+    Colors.amber,
+    Colors.lightGreen,
+    Colors.deepPurpleAccent,
+    Colors.lightBlue,
+    Colors.pinkAccent
+  ];
+
+  Color getColorByName(String str) {
+    return colors[str.codeUnitAt(0) % colors.length];
+  }
 
   final ChatUserDto userData;
 
@@ -340,18 +354,18 @@ class _ChatAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
+    final color = getColorByName(userData.name ?? "Unknown name");
     return SizedBox(
       width: _size,
       height: _size,
       child: Material(
-        color: colorScheme.primary,
+        color: color,
         shape: const CircleBorder(),
         child: Center(
           child: Text(
             userData.name != null
                 ? '${userData.name!.split(' ').first[0]}${userData.name!.split(' ').last[0]}'
-                : '',
+                : '?',
             style: TextStyle(
               color: colorScheme.onPrimary,
               fontWeight: FontWeight.bold,
