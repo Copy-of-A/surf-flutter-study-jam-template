@@ -4,6 +4,7 @@ import '../../chat/repository/chat_repository.dart';
 import '../../chat/screens/chat_screen.dart';
 import '../models/chat_topic_dto.dart';
 import '../repository/chart_topics_repository.dart';
+import 'create_topic_screen.dart';
 
 /// Screen with different chat topics to go to.
 class TopicsScreen extends StatefulWidget {
@@ -44,7 +45,16 @@ class _TopicsScreenState extends State<TopicsScreen> {
         title: "flutter tutorial",
         home: Scaffold(
             appBar: AppBar(
-              title: const Text("Flutter Chat"),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Flutter Chat"),
+                  IconButton(
+                    onPressed: () => createChat(context),
+                    icon: const Icon(Icons.add_box),
+                  ),
+                ],
+              ),
             ),
             body: Column(children: [
               Expanded(
@@ -52,10 +62,27 @@ class _TopicsScreenState extends State<TopicsScreen> {
                 itemCount: _currentTopics.length,
                 separatorBuilder: (BuildContext context, int index) =>
                     const Divider(),
-                itemBuilder: (_, index) =>
-                    ChatTopic(topicData: _currentTopics.elementAt(index), studyJamClient: widget.chatTopicsRepository.getStudyJamClient(),),
+                itemBuilder: (_, index) => ChatTopic(
+                  topicData: _currentTopics.elementAt(index),
+                  studyJamClient:
+                      widget.chatTopicsRepository.getStudyJamClient(),
+                ),
               ))
             ])));
+  }
+
+  void createChat(BuildContext context) {
+    Navigator.push<ChatScreen>(
+      context,
+      MaterialPageRoute(
+        builder: (_) {
+          return CreateTopicScreen(
+            chatTopicsRepository: widget.chatTopicsRepository,
+            studyJamClient: widget.chatTopicsRepository.getStudyJamClient(),
+          );
+        },
+      ),
+    );
   }
 }
 
