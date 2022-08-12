@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_chat_bubble/bubble_type.dart';
+import 'package:flutter_chat_bubble/chat_bubble.dart';
+import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_message_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_message_location_dto.dart';
 import 'package:surf_practice_chat_flutter/features/chat/models/chat_user_dto.dart';
@@ -28,6 +31,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _nameEditingController = TextEditingController();
   late ChatGeolocationDto _location;
+  bool _hasLocation = false;
 
   Iterable<ChatMessageDto> _currentMessages = [];
 
@@ -68,12 +72,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _onSendPressed(String messageText) async {
-    final messages = _location == null
-        ? await widget.chatRepository.sendMessage(messageText)
-        : await widget.chatRepository
-            .sendGeolocationMessage(message: messageText, location: _location);
+    final messages = _hasLocation
+        ? await widget.chatRepository
+            .sendGeolocationMessage(message: messageText, location: _location)
+        : await widget.chatRepository.sendMessage(messageText);
     setState(() {
       _currentMessages = messages;
+      _hasLocation = false;
     });
   }
 
@@ -81,6 +86,7 @@ class _ChatScreenState extends State<ChatScreen> {
     print("!location: $location");
     setState(() {
       _location = location;
+      _hasLocation = true;
     });
   }
 }
@@ -251,32 +257,29 @@ class _ChatMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: chatData.chatUserDto is ChatUserLocalDto
-          ? colorScheme.primary.withOpacity(.1)
-          : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: 18,
-          vertical: 18,
+          vertical: 5,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
+          textDirection: chatData.chatUserDto is ChatUserLocalDto
+              ? TextDirection.rtl
+              : TextDirection.ltr,
           children: [
             _ChatAvatar(userData: chatData.chatUserDto),
             const SizedBox(width: 16),
             Expanded(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                // margin: EdgeInsets.only(right: 12, top: 8),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF486993),
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(15),
-                    topRight: Radius.circular(15),
-                    topLeft: Radius.circular(15),
-                  ),
-                ),
+              child: ChatBubble(
+                clipper: ChatBubbleClipper1(
+                    type: chatData.chatUserDto is ChatUserLocalDto
+                        ? BubbleType.sendBubble
+                        : BubbleType.receiverBubble),
+                margin: const EdgeInsets.only(right: 5, top: 15),
+                backGroundColor: chatData.chatUserDto is ChatUserLocalDto
+                    ? colorScheme.primary.withOpacity(.3)
+                    : null,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

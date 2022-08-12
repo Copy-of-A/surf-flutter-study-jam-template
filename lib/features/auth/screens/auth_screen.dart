@@ -120,8 +120,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     right: 0,
                     child: IconButton(
                         onPressed: () => setState(() {
-                          _isHidden = !_isHidden;
-                        }),
+                              _isHidden = !_isHidden;
+                            }),
                         alignment: Alignment.centerRight,
                         icon: _isHidden
                             ? const Icon(Icons.visibility)
@@ -163,7 +163,6 @@ class _AuthScreenState extends State<AuthScreen> {
         password: _passwordController.text.toString());
 
     _auth(model).then((token) {
-      _saveDataToShared(model);
       _pushToChat(context, token);
     }).catchError((e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -176,7 +175,7 @@ class _AuthScreenState extends State<AuthScreen> {
           Text(e.message),
         ])),
       );
-    });
+    }).then((value) => _saveDataToShared(model));
   }
 
   _saveDataToShared(FormModel model) async {
