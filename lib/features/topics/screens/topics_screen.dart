@@ -62,7 +62,7 @@ class _TopicsScreenState extends State<TopicsScreen> {
                 children: [
                   const Text("Flutter Chat"),
                   IconButton(
-                    onPressed: () => createChat(context),
+                    onPressed: () => createNewTopic(context),
                     icon: const Icon(Icons.add_box),
                   ),
                 ],
@@ -83,7 +83,7 @@ class _TopicsScreenState extends State<TopicsScreen> {
             ])));
   }
 
-  void createChat(BuildContext context) {
+  void createNewTopic(BuildContext context) {
     Navigator.push<ChatScreen>(
       context,
       MaterialPageRoute(
@@ -91,6 +91,7 @@ class _TopicsScreenState extends State<TopicsScreen> {
           return CreateTopicScreen(
             chatTopicsRepository: widget.chatTopicsRepository,
             studyJamClient: widget.chatTopicsRepository.getStudyJamClient(),
+              authRepository: widget.authRepository,
           );
         },
       ),

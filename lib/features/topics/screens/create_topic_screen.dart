@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:surf_practice_chat_flutter/features/topics/screens/topics_screen.dart';
 import 'package:surf_study_jam/surf_study_jam.dart';
+import '../../auth/repository/auth_repository.dart';
 import '../../chat/screens/chat_screen.dart';
 import '../models/chat_topic_send_dto.dart';
 import '../repository/chart_topics_repository.dart';
@@ -11,10 +12,11 @@ class CreateTopicScreen extends StatefulWidget {
   const CreateTopicScreen(
       {Key? key,
       required this.chatTopicsRepository,
-      required this.studyJamClient})
+      required this.studyJamClient, required this.authRepository})
       : super(key: key);
   final IChatTopicsRepository chatTopicsRepository;
   final StudyJamClient studyJamClient;
+  final IAuthRepository authRepository;
 
   @override
   State<CreateTopicScreen> createState() => _CreateTopicScreenState();
@@ -116,7 +118,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         description: _topicDescriptionController.text);
 
     _createTopic(chatTopicSendDto).then((token) {
-      Navigator.pop(context);
+      openChat((context));
     }).catchError((e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -131,18 +133,18 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
     });
   }
 
-  // void openChat(BuildContext context) {
-  //   Navigator.push<ChatScreen>(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (_) {
-  //         return TopicsScreen(
-  //             chatTopicsRepository:
-  //                 ChatTopicsRepository(widget.studyJamClient));
-  //       },
-  //     ),
-  //   );
-  // }
+  void openChat(BuildContext context) {
+    Navigator.push<TopicsScreen>(
+      context,
+      MaterialPageRoute(
+        builder: (_) {
+          return TopicsScreen(
+              chatTopicsRepository:
+                  ChatTopicsRepository(widget.studyJamClient), authRepository: widget.authRepository,);
+        },
+      ),
+    );
+  }
 
   _createTopic(ChatTopicSendDto chatTopicSendDto) async {
     await widget.chatTopicsRepository.createTopic(chatTopicSendDto);
